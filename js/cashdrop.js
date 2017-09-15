@@ -19,7 +19,7 @@ xhr.onreadystatechange  = function() {
     }
 }
 
-xhr.open('GET', 'proxy.php?url=' + url + "/mempool/transactions?q=block_id(-1)", true);
+xhr.open('GET', 'https://porlybe.github.io/CashDrop/proxy.php?url=' + url + "/mempool/transactions?q=block_id(-1)", true);
 xhr.send();
 
 /*

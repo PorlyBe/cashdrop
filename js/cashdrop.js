@@ -100,8 +100,8 @@ var createScene = function() {
     soundDrop = new BABYLON.Sound("soundDrop", "assets/sounds/drop.wav", scene);
 
     // shows scene debugger
-    BABYLON.DebugLayer.InspectorURL = "https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js";
-	scene.debugLayer.show();
+    //BABYLON.DebugLayer.InspectorURL = "https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js";
+	//scene.debugLayer.show();
 	
     BABYLON.SceneOptimizer.OptimizeAsync(scene, OptimizerOptions(), null, null);
 

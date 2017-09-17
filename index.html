@@ -1,21 +1,52 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
-<title>Cash Drop - Bitcoin Cash Mempool Visualiser</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=11" />
 
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=11" />
+    <title>Cash Drop - Bitcoin Cash Mempool Visualiser</title>
 
-<link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
 
-<script	src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
-<script src="js/libs/babylon.custom.oimo.js"></script>
-<script src="js/babylon.inspector.bundle.js"></script>
-<script src="js/libs/hand.minified.js"></script>
+    <script	src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/cannon.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    <!--<script src="js/libs/hand.minified.js"></script>-->
 
 </head>
 <body>
-	<canvas id="renderCanvas"></canvas>
-	<script src="js/cashdrop.js"></script>
+	<canvas id="renderCanvas" height="640" width="480"></canvas>
+    <div id="info">
+        <h1>CashDrop</h1>
+        <h2>Bitcoin Cash Mempool Visualiser</h2>
+        <input type="button" value="info" onclick=showInfo() />
+    </div>
+    <div id="credits">
+        <h3>CashDrop - Bitcoin Cash Mempool Visualiser</h3>
+        <p>This is my first public JavaScript project. It was designed to help me learn JavaScript.</p>
+        <p>The initial idea came from <a href="https://bitbonkers.com/" target="_blank">BitBonkers</a>. I liked this visualiser but is not Bitcoin Cash, so I decided to make my own.</p>
+        <p>The graphics & physics use <a href="https://www.babylonjs.com/" target="_blank">BabylonJS & Cannon</a>.</p>
+        <p>New transactions and blocks are received using <a href="https://socket.io/" target="_blank">Socket.io</a> with <a href="https://cashexplorer.bitcoin.com/" target="_blank">cashexplorer.bitcoin.com</a>.</p>
+        <p>Coin texture was designed by Mjbmonetarymetals and was found in the <a href="https://forum.bitcoin.com/bitcoin-cash-f119/bitcoin-cash-logo-branding-t48603.html" target="_blank">this bitcoin.com forum post</a>.</p>
+        <p>Skybox texture comes from <a href="http://3delyvisions.co/skf1.htm" target="_blank">3DElyvisions</a>.</p>
+        <p>Sound is from <a href="https://freesound.org/people/LeMudCrab/sounds/163452/" target="_blank">feesounds.com</a></p>
+        <p>There is no real purpose of this visualiser, just a fun little project I did in my spare time. If you like what I've done and would like to show your support, please use the QR code or address below to send me some Bitcoin Cash for a beer.</p>
+        <p>Suggestions and comments are welcome, please send me a private message on reddit /u/porlybe</p>
+        <img src="assets/images/qr.png" />
+        <p>1BEpW8LnYmBpSFpgJkhPM8Ga7Ry99MPUmE</p>
+        <input type="button" id="infoExit" value="Hide" onclick="hideInfo()">
+    </div>
+    <script>
+        var credits = document.getElementById("credits");
+        function showInfo() {
+            credits.style.display = "block";
+        }
+        function hideInfo() {
+            credits.style.display = "none";
+        }
+    </script>
+    <script src="js/cashdrop.js"></script>
 </body>
 </html>

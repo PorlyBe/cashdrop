@@ -1,64 +1,57 @@
-/*
- *  connects to blockchair for initial transaction loading
- */
-var url = "https://api.blockchair.com/bitcoin-cash";
+"use strict";
+// *************************************************************************************************************
+// CONNECT TO BITCOIN.COM CASHEXPLORER WEBSOCKET FOR INCOMMING TRANSACTIONS & INITIATE NEW BLOCK FOUND SEQUENCE
+// *************************************************************************************************************
 var xhr = new XMLHttpRequest();
-var newTX = true;
+var socket = io("http://cashexplorer.bitcoin.com/");
 
 xhr.onreadystatechange  = function() {
 	if (this.readyState == 4 && this.status == 200) {
         var obj = JSON.parse(this.responseText);
-        if (newTX){
-        	initTransactions(obj.data);
-        	newTX = false;
-        } else {
-            addBlock();
-        	clearTransactions(obj.tx);
-        	
-        }
+        addBlock();
+        setTimeout(clearTransactions(obj.tx), 1000);
     }
 }
 
-xhr.open('GET', 'https://porlybe.github.io/CashDrop/proxy.php?url=' + url + "/mempool/transactions?q=block_id(-1)", true);
-xhr.send();
-
-/*
- * connects to bitcoin.com cashexplorer websocket for incomming transactions
- */
-var socket = io("http://cashexplorer.bitcoin.com/");
-room = 'inv';
-eventTX = 'tx';
-eventBlock = 'block';
-
 socket.on('connect', function() {
-	socket.emit('subscribe', room);
+	socket.emit('subscribe', "inv");
 });
-socket.on(eventTX, function(data) {
+
+socket.on("tx", function(data) {
 	Transaction(data.valueOut, data.txid);
-	// console.log("New TX: " + data.txid + " : " + data.valueOut);
 });
-socket.on(eventBlock, function(data) {
-	// Block(data);
-	xhr.open('GET', "proxy.php?url=https://cashexplorer.bitcoin.com/insight-api/block/" + data, true);
+
+socket.on("block", function (data) {
+	xhr.open('GET', "https://cashexplorer.bitcoin.com/insight-api/block/" + data, true);
 	xhr.send();
 	
 });
 
-
-var canvas = document.querySelector("#renderCanvas");
+var canvas = document.getElementById("renderCanvas");
 var engine = new BABYLON.Engine(canvas, true);
 
-var shadows = [];
+var shadows = []; // array for shadows
 
+// ******************************
+// INITIAL CREATION OF THE SCENE
+// ******************************
 var createScene = function() {
 	var scene = new BABYLON.Scene(engine);
 	
-	// Background color
-	scene.clearColor = new BABYLON.Color3.Gray();// Color3(0, 1, 0);
-	scene.ambientColor = new BABYLON.Color3(1,1,1);
-	
-	// camera
-	var camera = new BABYLON.ArcRotateCamera("ArcRotateCamera", 1, 0.8, 15, new BABYLON.Vector3(0, 0, 0), scene);
+	// create skybox & skybox material
+    var skybox = BABYLON.Mesh.CreateBox("skyBox", 100.0, scene);
+    var skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
+    skybox.position.y = -10;
+    skybox.renderingGroupId = 0;
+    skybox.infiniteDistance = true;
+    skyboxMaterial.backFaceCulling = false;
+    skyboxMaterial.disableLighting = true;
+    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("assets/textures/skybox", scene);
+    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+    skybox.material = skyboxMaterial;
+    
+	// create camera
+	var camera = new BABYLON.ArcRotateCamera("ArcRotateCamera", 4.75, 1.3, 15, new BABYLON.Vector3(0, -1, 0), scene);
 	camera.lowerBetaLimit = 0.1;
 	camera.upperBetaLimit = (Math.PI / 2) * 0.9;
 	camera.lowerRadiusLimit = 5;
@@ -75,104 +68,156 @@ var createScene = function() {
 	
 	// physics
 	var gravityVector = new BABYLON.Vector3(0,-9.81, 0);
-	var physicsPlugin = new BABYLON.OimoJSPlugin();
+	var physicsPlugin = new BABYLON.CannonJSPlugin();
 	scene.enablePhysics(gravityVector, physicsPlugin);
 	scene.enablePhysics();	
 	
 	// Add Ground to scene
 	var numberOfSides = 32;
-	var diameter = 10;
-	var ground = BABYLON.Mesh.CreateCylinder("ground", 0.5, diameter, diameter, numberOfSides, 2, scene);
-	ground.position.y = -0.25;
-	ground.material = groundMaterial;
-	ground.receiveShadows = true;
+    var diameter = 10;
+
+	ground = BABYLON.Mesh.CreateCylinder("ground", 0.5, diameter, diameter, numberOfSides, 1, scene);
+    ground.position.y = -2;
+    groundMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0);
+    groundMaterial.reflectionTexture = new BABYLON.MirrorTexture("mirror", 512, scene, true); //Create a mirror texture
+    groundMaterial.reflectionTexture.mirrorPlane = new BABYLON.Plane(0, -5.75, 0, -10.0);
+    groundMaterial.reflectionTexture.renderList = [skybox];
+    groundMaterial.reflectionTexture.level = 0.1;
+    ground.receiveShadows = true;
+    ground.material = groundMaterial;
 	ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.8 }, scene);
-	
-	addSides(numberOfSides, diameter);
-	
+
+    // add sides to the ground
+    addSides(numberOfSides, diameter);
+
+    // create coinparent for cloning
 	coinParent = createCoin();
 	
-	// GUI
+	// create UI for coin click info
 	setGUI();
 
-	// shows scene debugger
+    // set sound
+    soundDrop = new BABYLON.Sound("soundDrop", "assets/sounds/drop.wav", scene);
+
+    // shows scene debugger
+    BABYLON.DebugLayer.InspectorURL = "https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js";
 	scene.debugLayer.show();
 	
-	//BABYLON.SceneOptimizer.OptimizeAsync(scene);
+    BABYLON.SceneOptimizer.OptimizeAsync(scene, OptimizerOptions(), null, null);
 
 	return scene;
 }; // End of createScene function
 
+
+var coinMaterial, coinMaterialClicked, groundMaterial, sideMaterial, blockMaterial, edgeMaterial; // materials
+var coinParent, ground; // global meshes
+var lastPicked, infoPlane, infoTexture, infoText, infoRect; // vars for GUI
+var soundDrop;
+
+// *********************
+//  SCENE OPTIMISATION
+// *********************
+var OptimizerOptions = function () {
+    var result = new BABYLON.SceneOptimizerOptions(30, 2000); // limit 30 FPS min here
+
+    var priority = 0;
+    result.optimizations.push(new BABYLON.ShadowsOptimization(priority));
+    result.optimizations.push(new BABYLON.LensFlaresOptimization(priority));
+
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.PostProcessesOptimization(priority));
+    result.optimizations.push(new BABYLON.ParticlesOptimization(priority));
+
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.TextureOptimization(priority, 256));
+
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
+
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 4));
+
+    return result;
+}
+// creates the scene
 var scene = createScene();
 
-// Materials
-var coinMaterial, coinMaterialClicked, groundMaterial, sideMaterial, blockMaterial;
 
-var coinParent;
-
-// vars for GUI
-var lastPicked, infoPlane, infoTexture, infoText, infoRect;
-
-// lights and shadows used for the scene
-function setLights(){
+// ********************
+//  LIGHTING & SHADOWS
+// ********************
+function setLights() {
+    // hemispheric light
 	var lightHem = new BABYLON.HemisphericLight("Hemi0", new BABYLON.Vector3(0, 1, 0), scene);
 	lightHem.diffuse = new BABYLON.Color3(1, 1, 1);
 	lightHem.specular = new BABYLON.Color3(1, 1, 1);
 	lightHem.groundColor = new BABYLON.Color3(0.1, 0.1, 0.1);
 	lightHem.intensity = 0.5;
-
-	var lightSpot = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(-7, 10, -7), new BABYLON.Vector3(0.4, -1, 0.4), 1.2, 4, scene);
-	lightSpot.diffuse = new BABYLON.Color3(1, 1, 1);
-	lightSpot.specular = new BABYLON.Color3(1, 1, 1);
-	lightSpot.intensity = 0.5;
-	
-	//Add shadows
-	shadows[0] = new BABYLON.ShadowGenerator(1024, lightSpot);
-	shadows[0].usePoissonSampling = true;
-	shadows[0].useBlurExponentialShadowMap = true;
+    // directional light
+    var lightDir = new BABYLON.DirectionalLight("Directional", new BABYLON.Vector3(0, -5, -10), scene);
+    lightDir.diffuse = new BABYLON.Color3(1, 1, 1);
+    lightDir.specular = new BABYLON.Color3(1, 1, 1);
+    lightDir.intensity = 0.5;
+    // shadows
+    shadows[0] = new BABYLON.ShadowGenerator(1024, lightDir);
+    shadows[0].useBlurExponentialShadowMap = true;
+    shadows[0].setTransparencyShadows = true;
 }
 
-// sets materials for the scene
-function setMaterials(){
-	// create materials
-	groundMaterial = new BABYLON.StandardMaterial("ground", scene)
-	sideMaterial = new BABYLON.StandardMaterial("side", scene)
+// ************************
+//  MATERIALS AND TEXTURES
+// ************************
+function setMaterials() {
+    var coinTexture = new BABYLON.Texture("assets/textures/coin.png", scene);
+
+    // initialise materials
+    groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+    edgeMaterial = new BABYLON.StandardMaterial("edge", scene);
+    sideMaterial = new BABYLON.StandardMaterial("side", scene);
 	coinMaterial = new BABYLON.StandardMaterial("coin", scene);
-	coinMaterialClicked = new BABYLON.StandardMaterial("coin", scene);
+	coinMaterialClicked = new BABYLON.StandardMaterial("coinClicked", scene);
 	blockMaterial = new BABYLON.StandardMaterial("block", scene);
 	
-	// set colors etc...
-	groundMaterial.diffuseColor = new BABYLON.Color3(1,1,0);
-	groundMaterial.specularColor = new BABYLON.Color3(1,1,0);
-	
-	sideMaterial.diffuseColor = new BABYLON.Color3(1,0,1);
-	sideMaterial.specularColor = new BABYLON.Color3(1,0,1);
-	
-	var coinTexture = new BABYLON.Texture("images/coin.png", scene);
-	
-	//coinMaterial.diffuseColor = new BABYLON.Color3(0,1,0);
-	//coinMaterial.specularColor = new BABYLON.Color3(0,1,0);
+    //  edge of ground
+    edgeMaterial.diffuseColor = new BABYLON.Color3(1, 1, 0);
+    edgeMaterial.specularColor = new BABYLON.Color3(1, 1, 0);
+
+    // sides
+    sideMaterial.emissiveColor = new BABYLON.Color3(0.1, 0, 0.1);
+    sideMaterial.alpha = 0.1;
+    sideMaterial.opacityFresnelParameters = new BABYLON.FresnelParameters();
+    sideMaterial.opacityFresnelParameters.leftColor = BABYLON.Color3.White();
+    sideMaterial.opacityFresnelParameters.rightColor = BABYLON.Color3.Black();
+    sideMaterial.hasAlpha = true;
+    sideMaterial.useSpecularOverAlpha = true;
+
+    // coin and coin clicked
 	coinMaterial.diffuseTexture = coinTexture;
-	coinMaterial.specularTexture = coinTexture;
-	// coinMaterial.diffuseTexture.hasAlpha = true;
-	
+    coinMaterial.specularTexture = coinTexture;
+    coinMaterial.emissiveColor = new BABYLON.Color3(0, 0.2, 0);
+
 	coinMaterialClicked.diffuseColor = new BABYLON.Color3(0.8,1,0.8);
 	coinMaterialClicked.specularColor = new BABYLON.Color3(0.8,1,0.8);
 	coinMaterialClicked.diffuseTexture = coinTexture;
-	// coinMaterialClicked.diffuseTexture.hasAlpha = true;
-	
+
+    // block
 	blockMaterial.diffuseColor = new BABYLON.Color3(1,0,0);
 	blockMaterial.specularColor = new BABYLON.Color3(1,0,1);
-	// blockMaterial.alpha = 0.95;
-	// blockMaterial.diffuseTexture.hasAlpha = true;
 }
 
-// creates GUI controls
+// *******************
+//  TRANSACTION INFO
+// *******************
 function setGUI(){
 	infoPlane = BABYLON.Mesh.CreatePlane("plane", 3);
-	infoPlane.isPickable =false;
-	infoPlane.position = new BABYLON.Vector3(0,-1,0);
-	
+	infoPlane.isPickable = false;
+    infoPlane.position = new BABYLON.Vector3(0, -3, 0);
+    infoPlane.visibility = 0;
+
 	infoPlane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
 	infoTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(infoPlane,1024,1024,false);
 	
@@ -190,142 +235,84 @@ function setGUI(){
 	
 	infoTexture.addControl(infoRect);	
 	infoTexture.addControl(infoText);
-	
-	var hudTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-// hudTexture.idealWidth = 1024;
-// hudTexture.idealHeight = 768;
-// hudTexture.renderAtIdealSize = true;
-//	
-	var createTextBox = function (text){
-		var hudText = new BABYLON.GUI.TextBlock();
-		// hudText.fontSize = 20;
-		hudText.alpha = 0.7;
-		hudText.color = "white";
-		hudText.text = text;
-		// hudText.width = text.length / 95;
-		hudText.height = "30px";
-		// hudText.textHorizontalAlignment =
-		// BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-		hudText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP; 
-		hudText.paddingLeft = "10px";
-		hudText.paddingTop = "10px";
-		// hudText.horizontalAlignment =
-		// BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-		hudText.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
-		
-		hudTexture.addControl(hudText);
-		return hudText;
-	}
-	
-	var title = createTextBox("Cash Drop");
-	var subtitle = createTextBox("Bitcoin Cash Mempool Visualiser");
-	subtitle.fontSize = 15;
-	subtitle.top = title.height;
-	
-	
-	var donation = createTextBox("Donate BCC: 1BEpW8LnYmBpSFpgJkhPM8Ga7Ry99MPUmE");
-	donation.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-	donation.paddingTop = "0px";
-	donation.fontSize = 15;
-	
-	donation.onPointerEnterObservable.add(function() {
-        donation.color = "blue";
-    });
-	donation.onPointerOutObservable.add(function() {
-        donation.color = "white";
-    });  
-	
-	donation.onPointerUpObservable.add(function() {
-        location.href;
-    });
 }
 
-// Add sides to the ground
+// ****************************************************
+//  CONSTRUCTS SIDES OF THE BOWL FOR LOOKS AND PHYSICS
+// ****************************************************
 function addSides(numberOfSides, diameter) {
-	
+
+    // constructive solid geometry from cylinders for the sides
 	var innerDiameter = diameter;
 	var outerDiameter = diameter + 0.1;
-	var height = 2;
-	
-	var tess = numberOfSides;
-	
-	var inner = BABYLON.MeshBuilder.CreateCylinder("cone", {diameter: innerDiameter, tessellation: tess}, scene);
-	//BABYLON.Mesh.CreateCylinder("inner", height, innerDiameter, innerDiameter, tess, 1, scene);
-	
-	var outer = BABYLON.MeshBuilder.CreateCylinder("cone", {diameter: outerDiameter, tessellation: tess}, scene);
-	//BABYLON.Mesh.CreateCylinder("outer", height, outerDiameter, outerDiameter, tess, 1, scene);
-		
+	var height = 1;
+    var inner = BABYLON.MeshBuilder.CreateCylinder("cone", { height: height, diameter: innerDiameter, tessellation: numberOfSides }, scene);
+    var outer = BABYLON.MeshBuilder.CreateCylinder("cone", { height: height, diameter: outerDiameter, tessellation: numberOfSides }, scene);
 	var innerCSG = BABYLON.CSG.FromMesh(inner);
-	var outerCSG = BABYLON.CSG.FromMesh(outer);
-	
+    var outerCSG = BABYLON.CSG.FromMesh(outer);
 	var subCSG = outerCSG.subtract(innerCSG);
-	
-    var newMesh = subCSG.toMesh("ground", sideMaterial, scene);
-	
-	//newMesh.physicsImpostor = new BABYLON.PhysicsImpostor(newMesh, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, restitution: 0.9 }, scene);
-	newMesh.position.y = 0.5;
-	newMesh.receiveShadows = true;
+    var newMesh = subCSG.toMesh("sides", sideMaterial, scene);
+
+    newMesh.position.y = -1.25;
+    newMesh.material = sideMaterial;
+
+    // creates edge around the ground to prevent weird mirror effect
+    var newMeshBottom = newMesh.clone("edge");
+    newMeshBottom.material = edgeMaterial;
+    newMeshBottom.scaling.y = 0.5;
+    newMeshBottom.position.y = -2;
+
+    // dispose the temporary meshes
 	inner.dispose();
 	outer.dispose();
-	
-	for (i in shadows){
-		shadows[i].getShadowMap().renderList.push(newMesh);
-	}
-	return;
-	
-	//var radius = 5;
+
+    // adds sides to grounds mirror render list
+    groundMaterial.reflectionTexture.renderList.push(newMesh);
+
+    // construct the sides for physics
+	var radius = diameter / 2;
 	var sides = [];
 	var sideParent = BABYLON.Mesh.CreateBox("side", 0, scene);
 	
 	for (var pt = 0; pt < numberOfSides; pt++){
 		var angle = (Math.PI/2) + (pt / numberOfSides) * 2 * Math.PI + (1/numberOfSides * Math.PI);
-		
 		var x = radius * Math.cos(angle);
 		var z = radius * Math.sin(angle);
 		var a = 1.5708 - angle;
-		var side = 2 * (radius + 0.2) * Math.sin(Math.PI/numberOfSides);
-		
-		sides[pt] = sideParent.clone("ground");
-		sides[pt].position = new BABYLON.Vector3(x, 0.5, z);
-		sides[pt].scaling = new BABYLON.Vector3(0.2, 2, side);
+		var side = diameter * Math.sin(Math.PI/numberOfSides);
+
+		sides[pt] = sideParent.clone("sides");
+		sides[pt].position = new BABYLON.Vector3(x, -1, z);
+		sides[pt].scaling = new BABYLON.Vector3(0.05, 1.5, side);
 		sides[pt].rotation.y = -angle;
 		sides[pt].physicsImpostor = new BABYLON.PhysicsImpostor(sides[pt], BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
-		
-		sides[pt].material = sideMaterial;
-		
-		sides[pt].receiveShadows = true;
-		//var mergedSides = BABYLON.Mesh.MergeMeshes(sides);
-		//mergedSides.name = "ground";
-		// Add shadows
-
-	}
+        sides[pt].visibility = 0;
+        sides[pt].isPickable = false;
+    }
+    // dispose of the side parent as no longer needed
 	sideParent.dispose();
 }
 
-// add transactions that are already in the mempool
+// *****************************
+//  CREATE INITIAL TRANSACTIONS
+// *****************************
 function initTransactions(data) {
-	for (key in data) {
+	for (var key in data) {
 		var value = data[key].output_total / 100000000;
 		var hash = data[key].hash;
 		Transaction(value, hash);
 	}
 }
 
-// creates a coin for transactions to instanciate
+// *****************************************************
+// CREATE PARENT COIN FOR CLONING WITH NEW TRANSACTIONS
+// *****************************************************
 function createCoin(){
 	// uv map for texture location
-	var uv = [
-		new BABYLON.Vector4(0, 0, 1, 1),
-		new BABYLON.Vector4(0.2, 0.2, 0.2, 0.2),
-		new BABYLON.Vector4(0, 0, 1, 1),
-	];
+	var uv = [new BABYLON.Vector4(0, 0, 1, 1), new BABYLON.Vector4(0.2, 0.2, 0.2, 0.2), new BABYLON.Vector4(0, 0, 1, 1)];
 	
 	// Colors per surface
-	var colors = [  
-		new BABYLON.Color4(0, 1, 0, 0),	
-		new BABYLON.Color4(1, 1, 1, 1),	
-		new BABYLON.Color4(0, 1, 0, 0)
-	];
+	var colors = [new BABYLON.Color4(0, 1, 0, 0), new BABYLON.Color4(1, 1, 1, 1), new BABYLON.Color4(0, 1, 0, 0)];
 
 	// options for coin creation
 	var options = {
@@ -335,25 +322,28 @@ function createCoin(){
 			hasRings: false,
 			faceUV: uv,
 			faceColors: colors,
-			tessellation: 32
+			tessellation: 16
 	}
 	
 	// make coin and add material, physics and shadows
-	coin = BABYLON.MeshBuilder.CreateCylinder("coinParent", options, scene);
+	var coin = BABYLON.MeshBuilder.CreateCylinder("coinParent", options, scene);
 	coin.material = coinMaterial;
-	coin.position.y = -1;
+	coin.position.y = -3;
 	coin.rotation.x = 90 * Math.PI/180;
 	
-	coin.physicsImpostor = new BABYLON.PhysicsImpostor(coin, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0 }, scene);
+	coin.physicsImpostor = new BABYLON.PhysicsImpostor(coin, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.1 }, scene);
 	//coin.showBoundingBox = true;
 	coin.receiveShadows = true;
-	coin.enabled = false;
+    coin.enabled = false;
+    coin.visibility = 0;
 	return coin;
 }
 
-// creates new transaction/coin
-function Transaction(value, txid){
-	var x, y, z, w, h, ry;
+// ***************************************************
+//  CLONES PARENT COIN AND POSITIONS/ROTATES NEW COIN
+// ***************************************************
+function Transaction(value, txid) {
+	var x, y, z, w, h, rY, mesh;
 	
 	// initial random location of coin before they drop
 	x = -2 + Math.random() * 4;
@@ -383,27 +373,37 @@ function Transaction(value, txid){
 	h = w / 8;
 
 	// initial rotation
-	rY = Math.random() * 180;
+	rY = Math.random() * Math.PI;
 
 	mesh = coinParent.clone(txid);
-	mesh.enabled = true;
-
-	
+    mesh.enabled = true;
+    mesh.visibility = 1;
 	mesh.position = new BABYLON.Vector3(x,y,z);
 	mesh.scaling = new BABYLON.Vector3(w,w,w);
-	
-	mesh.rotation.y = rY * Math.PI/180;
+	mesh.rotation.y = rY;
 	mesh.physicsImpostor.mass = 1;
-	mesh.txValue = value;
+    mesh.txValue = value;
+    mesh.collided = true;
 	
-	for (i in shadows){
+	for (var i in shadows){
 		shadows[i].getShadowMap().renderList.push(mesh);
-	}
+    }
+
+    mesh.physicsImpostor.registerOnPhysicsCollide(ground.physicsImpostor, function (main, collided) {
+        if (mesh.collided == true) {
+            soundDrop.play();
+            mesh.collided = false;
+        }
+    });
+
+    // add coin to ground mirror render list
+    groundMaterial.reflectionTexture.renderList.push(mesh);
 }
 
-
-// adds a block to the scene and then rotates it
-function addBlock(){
+// *****************************
+//  CREATE BLOCK AND ANIMATE IT
+// *****************************
+function addBlock() {
 	var block = BABYLON.Mesh.CreateBox("block", 6.5, scene);
 	block.material = blockMaterial;
 	block.position.y = -6;
@@ -427,12 +427,13 @@ function addBlock(){
 	}
 	BABYLON.Animation.CreateAndStartAnimation('blockMove', block, 'position.y', 60, 120, -6, 8, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
 	
-
 }
 
-// remove transactions from list when block detected
-function clearTransactions(data){
-	for(tx in data){
+// *************************************************
+//  CLEAR TRANSACTIONS THAT ARE INCLUDED IN A BLOCK
+// *************************************************
+function clearTransactions(data) {
+	for(var tx in data){
 		if (scene.getMeshByName(data[tx])){
 			scene.getMeshByName(data[tx]).dispose(true);
 		}
@@ -443,6 +444,7 @@ function clearTransactions(data){
 engine.runRenderLoop(function() {
 	scene.render();
 });
+
 // Watch for browser/canvas resize events
 window.addEventListener("resize", function() {
 	engine.resize();
@@ -452,27 +454,30 @@ window.addEventListener("resize", function() {
 window.addEventListener("click", function(){
 	var pickResult = scene.pick(scene.pointerX, scene.pointerY);
 	var pickedMesh = pickResult.pickedMesh;
-	
-	if(pickedMesh != null && pickedMesh.name != "ground"){
+
+    if (pickedMesh.name == "ground" || pickedMesh.name == "sides" || pickedMesh.name == "edge") {
+        return;
+    } else if (pickedMesh.name == "skyBox" || pickedMesh == lastPicked) {
+		if (lastPicked == null) 
+			return;
+        lastPicked.material = coinMaterial;
+        lastPicked = null;
+        infoPlane.visibility = 0;		
+	} else {
 		if(lastPicked != null){
 			lastPicked.material = coinMaterial;
-		} 
+        }
 		// infoPlane.parent = pickedMesh;
 		infoPlane.position.x = pickedMesh.position.x;
 		infoPlane.position.z = pickedMesh.position.z;
-		infoPlane.position.y = 0.6;
-		
+        infoPlane.position.y = -1;
+        infoPlane.visibility = 1;
+
 		var txVal = pickedMesh.txValue.toString();
 		infoText.text = txVal;
 		infoRect.width = txVal.length / 17;
 		
 		pickedMesh.material = coinMaterialClicked;
 		lastPicked = pickedMesh;
-	} else if (pickedMesh == null){
-		if (lastPicked == null) 
-			return;
-		lastPicked.material = coinMaterial;
-		infoPlane.position = new BABYLON.Vector3(0,-1,0);
-		
-	}
+    } 
 });

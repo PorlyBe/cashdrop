@@ -1,5 +1,6 @@
 # Cash Drop
 Bitcoin Cash Mempool Visualiser
+
 This is my first public JavaScript project. It was designed to help me learn JavaScript.
 
 The initial idea came from BitBonkers. I liked this visualiser but is not Bitcoin Cash, so I decided to make my own.

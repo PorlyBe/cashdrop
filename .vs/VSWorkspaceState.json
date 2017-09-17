@@ -1,10 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\js",
-    "\\js\\libs",
-    "\\textures"
+    "\\js"
   ],
-  "SelectedNode": "\\js\\cashdrop.js",
+  "SelectedNode": "\\.gitignore",
   "PreviewInSolutionExplorer": false
 }

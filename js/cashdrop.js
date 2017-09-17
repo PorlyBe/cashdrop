@@ -3,7 +3,7 @@
 // CONNECT TO BITCOIN.COM CASHEXPLORER WEBSOCKET FOR INCOMMING TRANSACTIONS & INITIATE NEW BLOCK FOUND SEQUENCE
 // *************************************************************************************************************
 var xhr = new XMLHttpRequest();
-var socket = io("http://cashexplorer.bitcoin.com/");
+var socket = io("https://cashexplorer.bitcoin.com/");
 
 xhr.onreadystatechange  = function() {
 	if (this.readyState == 4 && this.status == 200) {

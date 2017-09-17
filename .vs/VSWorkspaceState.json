@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\js"
+    "\\js",
+    "\\js\\libs",
+    "\\textures"
   ],
   "SelectedNode": "\\js\\cashdrop.js",
   "PreviewInSolutionExplorer": false

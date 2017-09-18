@@ -3,7 +3,7 @@
 // CONNECT TO BITCOIN.COM CASHEXPLORER WEBSOCKET FOR INCOMMING TRANSACTIONS & INITIATE NEW BLOCK FOUND SEQUENCE
 // *************************************************************************************************************
 var xhr = new XMLHttpRequest();
-var socket = io("http://blockdozer.com/");
+var socket = io("https://bitcoincash.blockexplorer.com/");
 
 xhr.onreadystatechange  = function() {
 	if (this.readyState == 4 && this.status == 200) {
@@ -22,7 +22,7 @@ socket.on("tx", function(data) {
 });
 
 socket.on("block", function (data) {
-	xhr.open('GET', "http://blockdozer.com/insight-api/block/" + data, true);
+	xhr.open('GET', "https://bitcoincash.blockexplorer.com/api/block/" + data, true);
 	xhr.send();
 	
 });

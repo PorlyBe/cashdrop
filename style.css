@@ -14,12 +14,92 @@ html, body {
 
 #info {
     position: absolute;
-    left: 10px;
     font-family: monospace;
     color: white;
-    width: 200px;
-    right: auto;
+    padding: 10px 10px 0 10px;
     top: 0px;
+    width:38em;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    max-width: 90%;
+}
+
+#info h3{
+    float:left;
+    margin-top: 10px;
+    width: 100%;
+}
+
+#status{
+    float:left;
+    width:100%;
+}
+
+#controls {
+    position:absolute;
+    right:10px;
+    top: 10px;
+    width: 48px;
+}
+
+input[type='button'] {
+    border: 2px solid #FFFFFF;
+    cursor: pointer;
+    background: #D4D4D4;
+    height: 48px;
+    width: 48px;
+    border-radius: 5px;
+    font-family: monospace;
+}
+
+#muteSound {
+    margin-top: 10px;
+    background-color: #D4D4D4;
+    border: 2px solid #FFFFFF;
+    border-radius: 5px;
+    overflow: hidden;
+    width: 46px;
+    height: 46px;
+    float: left;
+    cursor: pointer;
+    font-family:monospace;
+    /*border: 2px solid #FFFFFF;
+    cursor: pointer;
+    background: #D4D4D4;
+    height: 48px;
+    width: 48px;
+    border-radius: 5px;
+    font-family: monospace;*/
+}
+
+#muteSound label{
+    float:left;
+    width: 46px;
+    height: 46px;
+}
+
+#muteSound label span {
+    text-align:center;
+    padding-top:14px;
+    height: 46px;
+    display:block;
+}
+
+#muteSound label input {
+    position:absolute;
+    top: -30px;
+}
+
+#muteSound input:checked + span {
+    background-color: #808080;
+    color: #FFFFFF;
+}
+
+
+
+#txInfo{
+    margin-bottom: 10px;
 }
 
 #credits {
@@ -31,29 +111,58 @@ html, body {
     text-align: center;
     background-color: rgb(0,0,0);
     background-color: rgba(0,0,0,0.5);
-    display:none;
-    padding: 0 10px;
-}
-#credits img{
-    opacity: 0.9;
+    display: none;
+    padding: 0 10px 0 10px;
+    overflow-y: auto;
+    border-radius: 15px;
+    max-height: 96%;
+    z-index: 10;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
-input[type='button'] {
-    border: 2px solid #FFFFFF;
-    cursor: pointer;
+#credits ul{
+    list-style:none;
+}
+
+#footer {
+    position: absolute;
+    width: 38em;
+    padding: 0 10px;
+    bottom: 10px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    max-width:100%;
+}
+
+#showTransaction {
+    border: 2px solid #ffffff;
     background: #D4D4D4;
-    height: 30px;
-    width: 60px;
+    height: 48px;
     border-radius: 5px;
     font-family: monospace;
+    width: 100%;
+    max-width: 38em;
+    text-align: center;
 }
 
+#showInfo{
+    position:relative;
+    float:right;
+}
 #infoExit{
-    position:absolute;
-    right:10px;
-    top: 10px;
+    position:relative;
+    margin-bottom: 20px;
 }
 
 a{
     color: #FFFFFF;
+}
+
+#bccLogo{
+    max-width: 320px;
+    width: 75%;
+    float:left;
 }

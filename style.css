@@ -22,7 +22,7 @@ html, body {
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
-    max-width: 90%;
+    max-width: 80%;
 }
 
 #info h3{

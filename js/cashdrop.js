@@ -106,12 +106,12 @@ var createScene = function() {
 
     // set sound
     soundDrop = new BABYLON.Sound("soundDrop", "assets/sounds/drop.wav", scene);
-    soundDonation = new BABYLON.Sound("soundDrop", "assets/sounds/woohoo.wav", scene);
-    soundWoosh = new BABYLON.Sound("soundDrop", "assets/sounds/woosh.wav", scene);
+    soundDonation = new BABYLON.Sound("soundDonation", "assets/sounds/woohoo.wav", scene);
+    soundWoosh = new BABYLON.Sound("soundWoosh", "assets/sounds/woosh.wav", scene);
 
     // shows scene debugger
- //   BABYLON.DebugLayer.InspectorURL = "https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js";
-	//scene.debugLayer.show();
+    BABYLON.DebugLayer.InspectorURL = "https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js";
+	scene.debugLayer.show();
 
     // checks every 300ms if physics objects are not moving and sets to static
     // might be temporary if coins misbehave when there are lots of them
@@ -160,7 +160,6 @@ function updateStatusText() {
             bccStatus.innerHTML = "Network Information<br />"
             bccStatus.innerHTML += "Block Height: " + obj.info.blocks + "<br />";
             bccStatus.innerHTML += "Difficulty: " + obj.info.difficulty;
-            //console.log(obj);
         }
     }
 }
@@ -275,6 +274,7 @@ function SetMaterials() {
     coinMaterial.specularColor = colorGreen;
     coinMaterial.specularPower = 64;
 
+    // coin donation material
     coinDonationMaterial.diffuseTexture = coinTexture;
     coinDonationMaterial.diffuseColor = new BABYLON.Color3(1, 1, 0);
     coinDonationMaterial.specularColor = colorGreen;
@@ -430,7 +430,7 @@ function CreateParentCoin(){
 //  CLONES PARENT COIN AND POSITIONS/ROTATES NEW COIN
 // ***************************************************
 function CreateTransaction(value, txid, vout) {
-	var x, y, z, w, h, rY, mesh;
+	var x, y, z, w, h, rY, mesh, pr;
 
 	// initial random location of coin before they drop
 	x = -2 + Math.random() * 4;
@@ -439,21 +439,29 @@ function CreateTransaction(value, txid, vout) {
 
 	// diameter of coin depending on size of value
 	if (value < 1) {
-		w = .2;
+        w = .2;
+        pr = 1;
 	} else if (value >= 1 && value < 10) {
-		w = .4;
+        w = .4;
+        pr = 0.9;
 	} else if (value >= 10 && value < 50) {
-		w = .6;
+        w = .6;
+        pr = 0.8;
 	} else if (value >= 50 && value < 100) {
-		w = .8;
+        w = .8;
+        pr = 0.7;
 	} else if (value >= 100 && value < 200) {
-		w = 1;
+        w = 1;
+        pr = 0.6;
 	} else if (value >= 200 && value < 500){
-		w = 1.2;
+        w = 1.2;
+        pr = 0.5;
 	} else if (value >= 500 && value < 1000){
-		w = 1.4;
+        w = 1.4;
+        pr = 0.4;
 	} else {
-		w = 1.6;
+        w = 1.6;
+        pr = 0.3;
 	}
 
 	// coin height
@@ -478,8 +486,10 @@ function CreateTransaction(value, txid, vout) {
 
     // play sound on collision
     mesh.collided = true;
+
     mesh.physicsImpostor.registerOnPhysicsCollide(ground.physicsImpostor, function (main, collided) {
         if (main.object.collided == true && !soundMute.checked) {
+            soundDrop.setPlaybackRate(pr);
             soundDrop.play();
             main.object.collided = false;
         }
@@ -534,30 +544,36 @@ function CreateBlock(txData) {
     txData.forEach((tx) => {
         if (scene.getMeshByName(tx)) {
             var coin = scene.getMeshByName(tx);
-            coin.physicsImpostor.mass = 0;
             BABYLON.Animation.CreateAndStartAnimation('moveCoinX', coin, 'position.x', 60, 60, coin.position.x, block.position.x, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
             BABYLON.Animation.CreateAndStartAnimation('moveCoinY', coin, 'position.y', 60, 60, coin.position.y, block.position.y, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
             BABYLON.Animation.CreateAndStartAnimation('moveCoinZ', coin, 'position.z', 60, 60, coin.position.z, block.position.z, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
         }
     });
 
+
+    // dispose of block and transactions
     animation.onAnimationEnd = function () {
         animation.animationStarted = false;
         ClearTransactions(txData);
         block.dispose();
     }
+
+    
 }
 
 // *************************************************
 //  CLEAR TRANSACTIONS THAT ARE INCLUDED IN A BLOCK
 // *************************************************
 function ClearTransactions(data) {
-	for(var tx in data){
-        if (scene.getMeshByName(data[tx])) {
-			scene.getMeshByName(data[tx]).dispose(true);
-		}
-    }
+    data.forEach((tx) => {
+        if (scene.getMeshByName(tx)) scene.getMeshByName(tx).dispose(true);
+    });
 
+    // loop through tx not in a block so fall instead of float
+    scene.meshes.forEach((m) => {
+        if (!m.physicsImpostor) return;
+        if (m.name != "ground" && m.name != "sides") m.physicsImpostor.setMass(m.scaling.x);
+    });
 
 }
 

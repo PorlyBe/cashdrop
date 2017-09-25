@@ -481,7 +481,9 @@ function createTransaction(value, txid, vout) {
 	mesh.position = new BABYLON.Vector3(x,y,z);
 	mesh.scaling = new BABYLON.Vector3(w,w,w);
     mesh.rotation.y = rY;
+
     mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: w, restitution: 0.1 }, scene);
+
     mesh.txValue = value;
     
 	// add mesh to shadow render list

@@ -178,7 +178,6 @@ var OptimizerOptions = function () {
 // creates the scene
 var scene = createScene();
 
-
 // *********************
 //  NETWORK STATUS TEXT
 // *********************
@@ -199,11 +198,12 @@ function updateStatusText() {
 // ******************************
 //  NETWORK TRANSACTION INFO TEXT
 // ******************************
-function updateTxInfoText(txID) {
-    if (txID != null) {
-        txInfo.innerHTML = "<a href='https://cashexplorer.bitcoin.com/tx/" + txID + "' target='_blank'>View transaction on cashexplorer.bitcoin.com</a>";
-        document.getElementById("showTransaction").value = txID;
-
+function updateTxInfoText(mesh) {
+    txInfo.innerHTML = "";
+    if (mesh != null) {
+        if (mesh.sdTransaction) txInfo.innerHTML = "<a href='https://satoshidice.com/' target='_blank'>SatoshiDICE</a> Transaction<br />";
+        txInfo.innerHTML += "<a href='https://cashexplorer.bitcoin.com/tx/" + mesh.name + "' target='_blank'>View transaction on cashexplorer.bitcoin.com</a>";
+        document.getElementById("showTransaction").value = mesh.name;
     } else {
         txInfo.innerHTML = "";
         document.getElementById("showTransaction").value = "Input Transaction ID to highlight it";
@@ -639,7 +639,7 @@ window.addEventListener("click", function () {
     // highlight picked mesh
     } else {
         highlightCoin(pickedMesh);
-        updateTxInfoText(pickedMesh.name);
+        updateTxInfoText(pickedMesh);
     } 
 });
 

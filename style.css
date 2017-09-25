@@ -64,13 +64,6 @@ input[type='button'] {
     float: left;
     cursor: pointer;
     font-family:monospace;
-    /*border: 2px solid #FFFFFF;
-    cursor: pointer;
-    background: #D4D4D4;
-    height: 48px;
-    width: 48px;
-    border-radius: 5px;
-    font-family: monospace;*/
 }
 
 #muteSound label{
@@ -96,10 +89,10 @@ input[type='button'] {
     color: #FFFFFF;
 }
 
-
-
 #txInfo{
     margin-bottom: 10px;
+    color: #FFFFFF;
+    font-family: monospace;
 }
 
 #credits {

@@ -283,7 +283,7 @@ function setMaterials() {
 
     // satoshi dice material
     coinSDMaterial.diffuseTexture = coinSDTexture;
-    coinSDMaterial.specularColor = colorGreen;
+    coinSDMaterial.specularColor = BABYLON.Color3.Black();
     coinSDMaterial.specularPower = 64;
 
     // block
@@ -319,7 +319,6 @@ function setUI(){
     infoTexture.addControl(infoText);
 
     highlight.addExcludedMesh(infoPlane);
-
 }
 
 // ****************************************************
@@ -492,7 +491,12 @@ function createTransaction(value, txid, vout) {
 
     // play sound on collision
     mesh.collided = true;
-    mesh.physicsImpostor.registerOnPhysicsCollide(ground.physicsImpostor, function (main, collided) {
+    var impostorList = [];
+    scene.meshes.forEach((m) => {
+        if (m.physicsImpostor) impostorList.push(m.physicsImpostor);
+    });
+
+    mesh.physicsImpostor.registerOnPhysicsCollide(impostorList, function (main, collided) {
         if (main.object.collided == true && !soundMute.checked) {
             soundDrop.setPlaybackRate(pr);
             soundDrop.play();
@@ -503,6 +507,14 @@ function createTransaction(value, txid, vout) {
     // add coin to ground mirror render list
     groundMaterial.reflectionTexture.renderList.push(mesh);
 
+    // checks if a transaction is special
+    specialTransaction(vout, mesh);
+}
+
+// *******************************************************
+// CHANGES MATERIAL AND PLAYS SOUND FOR SELECTED ADDRESSES
+// *******************************************************
+function specialTransaction(vout, mesh) {
     // check if coin is sent to donation address and apply a special material
     vout.forEach((key) => {
         var keys = Object.keys(key);
@@ -523,13 +535,13 @@ function createTransaction(value, txid, vout) {
                 k == "1Dice81SKu2S1nAzRJUbvpr5LiNTzn7MDV" ||
                 k == "1Dice9GgmweQWxqdiu683E7bHfpb7MUXGd") {
 
+                mesh.sdTransaction = true;
                 mesh.material = coinSDMaterial;
                 soundSD.setVolume(0.2);
                 if (!soundMute.checked) soundSD.play();
             }
         });
     });
-
 }
 
 // *****************************

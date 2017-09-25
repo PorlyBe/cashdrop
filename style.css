@@ -81,6 +81,29 @@ html, body {
     box-sizing: border-box;
 }
 
+#config {
+    position: absolute;
+    width: 280px;
+    text-align: right;
+    right: 10px;
+    top: 10px;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.5);
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    font-family: monospace;
+    color: white;
+    border-radius: 15px;
+    padding: 80px 10px 0 10px;
+    display: none;
+}
+
+.configTitle{
+    position:absolute;
+    top:0px;
+    left:20px;
+}
 
 #footer {
     position: absolute;
@@ -112,12 +135,29 @@ html, body {
     width: 48px;
     border: none;
     transition: 0.3s;
+    top: 10px;
 }
 
 .configButton:hover{
     opacity: 0.8;
     transition: 0.3s;
 }
+
+.helpButton {
+    background: url(assets/images/help.png);
+    position: relative;
+    float: right;
+    height: 48px;
+    width: 48px;
+    border: none;
+    transition: 0.3s;
+}
+
+.helpButton:hover {
+    opacity: 0.8;
+    transition: 0.3s;
+}
+
 
 #infoExit{
     position:relative;
@@ -151,9 +191,18 @@ div.tab button {
     transition: 0.3s;
 }
 
-div.tab button.close {
-    float: right;
-    border-radius: 5px;
+button.close {
+        background-color: #D4D4D4;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        transition: 0.3s;
+        position: absolute;
+        border-radius: 5px;
+        top: 10px;
+        right: 10px;
+        opacity:1;
 }
 
 /* Change background color of buttons on hover */
@@ -233,7 +282,7 @@ div.tab button.right{
 }
 
 input:checked + .slider {
-    background-color: #2196F3;
+    background-color: #f7941d;
 }
 
 input:focus + .slider {

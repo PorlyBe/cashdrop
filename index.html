@@ -26,29 +26,22 @@
         <div id="status"></div>
     </div>
     <div id="controls">
-        <input type="button" class="configButton" onclick="showHelp()" />
+        <input type="button" class="helpButton" onclick="show('help')" />
+        <input type="button" class="configButton" onclick="show('config')" />
     </div>
 
     <div id="help">
         <div class="tab">
             <button class="tablinks active left" onclick="openTab(event, 'About')">About</button>
-            <button class="tablinks" onclick="openTab(event, 'Config')">Config</button>
+            <button class="tablinks" onclick="openTab(event, 'Instructions')">Instructions</button>
             <button class="tablinks right" onclick="openTab(event, 'FAQ')">FAQ</button>
-            <button class="tablinks close" onclick="hideInfo()">Close</button>
+            <button class="close" onclick="hide('help')">Close</button>
         </div>
 
         <div id="About" class="tabcontent" style="display: block;">
             <h3>CashDrop - a Bitcoin Cash mempool visualiser</h3>
             <p>View live transactions on the Bitcoin Cash network with this 3D visualiser. The initial idea came from <a href="https://bitbonkers.com/" target="_blank">BitBonkers</a>. I liked this visualiser but is not Bitcoin Cash, so I decided to make my own. There is no real purpose of this visualiser, just a fun little project I did in my spare time.</p>
             <p>Keep an eye out for the black coins. These are <a href="https://satoshidice.com/" target="_blank">Satoshi Dice</a> transactions.</p>
-            <h3>Instructions</h3>
-            <p>
-                Click/Touch Drag to rotate around<br />
-                Mouse Wheel or Pinch to Zoom<br />
-                Click or Touch coin to view it's total output value<br />
-                Type Transaction ID in box to view it<br />
-                Send some BCC to the address below for a lame little easter egg<br />
-            </p>
             <h3>Credits</h3>
             <p>
                 SatoshiDICE logo and SFX: <a href="https://satoshidice.com/" target="_blank">satoshidice.com</a><br />
@@ -63,55 +56,81 @@
             <p>1BEpW8LnYmBpSFpgJkhPM8Ga7Ry99MPUmE</p>
         </div>
 
-        <div id="Config" class="tabcontent" >
-            <h3>Sounds</h3>
-            <span class="switchlabel left">ON</span>
-            <label class="switch">
-                <input type="checkbox" id="soundMute" />
-                <span class="slider"></span>
-            </label>
-            <span class="switchlabel right">OFF</span>
-
-            <h3>SatoshiDICE - WIP</h3>
-            <span class="switchlabel left">ON</span>
-            <label class="switch">
-                <input type="checkbox" id="disableSD" />
-                <span class="slider"></span>
-            </label>
-            <span class="switchlabel right">OFF</span>
-
-            <h3>TX Display - WIP</h3>
-            <span class="switchlabel left">Value (BCC)</span>
-            <label class="switch">
-                <input type="checkbox" id="txRef" />
-                <span class="slider"></span>
-            </label>
-            <span class="switchlabel right">Size (bytes)</span>
+        <div id="Instructions" class="tabcontent">
+            <h3>Instructions</h3>
+            <p>
+                Click/Touch Drag to rotate around<br />
+                Mouse Wheel or Pinch to Zoom<br />
+                Click or Touch coin to view it's total output value<br />
+                Type Transaction ID in box to view it<br />
+                Send some BCC to the address below for a lame little easter egg<br />
+            </p>
         </div>
 
         <div id="FAQ" class="tabcontent">
-            <h3>FAQ</h3>
-            <p>What's bitcoin cash, etc...</p>
+            <h3>What is Bitcoin Cash?</h3>
+            <p>Bitcoin Cash is peer-to-peer electronic cash for the Internet. It is fully decentralized, with no central bank and requires no trusted third parties to operate.</p>
+            <h3>Is Bitcoin Cash different from 'Bitcoin'?</h3>
+            <p>Yes. Bitcoin Cash is the continuation of the Bitcoin project as peer-to-peer digital cash. It is a fork of the Bitcoin blockchain ledger, with upgraded consensus rules that allow it to grow and scale.</p>
+            <h3>Where can I find more information?</h3>
+            <p>Check out the first bitcoin cash website <a href="https://www.bitcoincash.org/" target="_blank">bitcoincash.org</a></p>
+            <h3>How can I help spread the word?</h3>
+            <p>Check out this site <a href="https://acceptbitcoin.cash/" target="_blank">acceptbitcoin.cash</a></p>
         </div>
-        
-        
+
     </div>
     <div id="aboutinfo">
-        
-        <input type="button" id="infoExit" value="Hide" onclick="hideInfo()">
+        <input type="button" id="infoExit" value="Hide" onclick="hide('help')">
     </div>
+
+    <div id="config">
+        <h2 class="configTitle">SETTINGS</h2>
+        <h3 class="switchlabel left">Sounds ON/OFF</h3>
+        
+        <label class="switch">
+            <input type="checkbox" id="soundMute" />
+            <span class="slider"></span>
+        </label>
+
+        <h3 class="switchlabel left">[WIP]Color GREEN/ORANGE</h3>
+        <label class="switch">
+            <input type="checkbox" id="coinColor" />
+            <span class="slider"></span>
+        </label>
+
+
+        <h3 class="switchlabel left">[WIP]SatoshiDICE ON/OFF</h3>
+        <label class="switch">
+            <input type="checkbox" id="disableSD" />
+            <span class="slider"></span>
+        </label>
+
+        <h3 class="switchlabel left">[WIP]Coin Value/bytes</h3>
+        <label class="switch">
+            <input type="checkbox" id="txRef" />
+            <span class="slider"></span>
+        </label>
+
+        <button class="close" onclick="hide('config')">Close</button>
+
+    </div>
+
+
     <div id="footer">
         <div id="txInfo"></div>
         <input type="text" id="showTransaction" value="Input Transaction ID to highlight it" size="64" onfocus="this.select()" onmouseup="return false;" onchange="followTransaction(this.value);" onkeyup="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();"/>
     </div>
     <script>
-        var credits = document.getElementById("help");
-        function showHelp() {
-            credits.style.display = "block";
+        //var credits = document.getElementById("help");
+        function show(e) {
+            var element = document.getElementById(e);
+            element.style.display = "block";
         }
-        function hideInfo() {
-            credits.style.display = "none";
+        function hide(e) {
+            var element = document.getElementById(e);
+            element.style.display = "none";
         }
+
 
         function openTab(evt, name) {
             // Declare all variables

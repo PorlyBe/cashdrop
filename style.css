@@ -12,7 +12,7 @@ html, body {
 	touch-action: none;
 }
 
-#info {
+.title {
     position: absolute;
     font-family: monospace;
     color: white;
@@ -25,7 +25,7 @@ html, body {
     max-width: 80%;
 }
 
-#info h3{
+.title h3{
     float:left;
     margin-top: 10px;
     width: 100%;
@@ -43,7 +43,7 @@ html, body {
     width: 48px;
 }
 
-input[type='button'] {
+/*input[type='button'] {
     border: 2px solid #FFFFFF;
     cursor: pointer;
     background: #D4D4D4;
@@ -51,43 +51,7 @@ input[type='button'] {
     width: 48px;
     border-radius: 5px;
     font-family: monospace;
-}
-
-#muteSound {
-    margin-top: 10px;
-    background-color: #D4D4D4;
-    border: 2px solid #FFFFFF;
-    border-radius: 5px;
-    overflow: hidden;
-    width: 46px;
-    height: 46px;
-    float: left;
-    cursor: pointer;
-    font-family:monospace;
-}
-
-#muteSound label{
-    float:left;
-    width: 46px;
-    height: 46px;
-}
-
-#muteSound label span {
-    text-align:center;
-    padding-top:14px;
-    height: 46px;
-    display:block;
-}
-
-#muteSound label input {
-    position:absolute;
-    top: -30px;
-}
-
-#muteSound input:checked + span {
-    background-color: #808080;
-    color: #FFFFFF;
-}
+}*/
 
 #txInfo{
     margin-bottom: 10px;
@@ -95,29 +59,28 @@ input[type='button'] {
     font-family: monospace;
 }
 
-#credits {
+#help {
     position: absolute;
     top: 10px;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    height: auto;
     font-family: monospace;
     color: white;
-    margin: 0 20px 0 20px;
     text-align: center;
     background-color: rgb(0,0,0);
     background-color: rgba(0,0,0,0.5);
     display: none;
     padding: 0 10px 0 10px;
-    overflow-y: auto;
     border-radius: 15px;
-    max-height: 96%;
     z-index: 10;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
 }
 
-#credits ul{
-    list-style:none;
-}
 
 #footer {
     position: absolute;
@@ -141,10 +104,21 @@ input[type='button'] {
     text-align: center;
 }
 
-#showInfo{
-    position:relative;
-    float:right;
+.configButton {
+    background: url(assets/images/settings.png);
+    position: relative;
+    float: right;
+    height: 48px;
+    width: 48px;
+    border: none;
+    transition: 0.3s;
 }
+
+.configButton:hover{
+    opacity: 0.8;
+    transition: 0.3s;
+}
+
 #infoExit{
     position:relative;
     margin-bottom: 20px;
@@ -158,4 +132,129 @@ a{
     max-width: 320px;
     width: 75%;
     float:left;
+}
+
+/* Style the tab */
+div.tab {
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+/* Style the buttons inside the tab */
+div.tab button {
+    background-color: #D4D4D4;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+div.tab button.close {
+    float: right;
+    border-radius: 5px;
+}
+
+/* Change background color of buttons on hover */
+div.tab button:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+div.tab button.active {
+    background-color: #ccc;
+}
+
+div.tab button.left{
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+div.tab button.right{
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+/* Style the tab content */
+.tabcontent {
+    display: none;
+    position: absolute;
+    overflow-y: auto;
+    top: 63px;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 5px;
+    transition: 0.3s;
+}
+
+.qrcode{
+    width:100%;
+    max-width: 320px;
+}
+
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+    display: none;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+.switchlabel {
+    height: 24PX;
+    vertical-align: middle;
+    display: inline-block;
+    position: relative;
+    bottom: 8px;
+}
+.switchlabel.left {
+    right: 10px;
+}
+.switchlabel.right{
+    left: 10px;
 }

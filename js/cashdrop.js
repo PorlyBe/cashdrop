@@ -112,9 +112,8 @@ var createScene = function() {
     soundWoosh = new BABYLON.Sound("Woosh", "assets/sounds/woosh.wav", scene);
     soundSD = new BABYLON.Sound("SatoshiDice", "assets/sounds/sd_coin.wav", scene);
     
-    // shows scene debugger
- //   BABYLON.DebugLayer.InspectorURL = "https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js";
-	//scene.debugLayer.show();
+    // scene debugger
+    BABYLON.DebugLayer.InspectorURL = "https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js";
 
     // checks every 300ms if physics objects are not moving and sets to static
     // might be temporary if coins misbehave when there are lots of them

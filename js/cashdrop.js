@@ -1,18 +1,29 @@
 "use strict";
-// *************************************************************************************************************
-// CONNECT TO BITCOIN.COM CASHEXPLORER WEBSOCKET FOR INCOMMING TRANSACTIONS & INITIATE NEW BLOCK FOUND SEQUENCE
-// *************************************************************************************************************
 const xhr = new XMLHttpRequest();
 const socket = io("https://cashexplorer.bitcoin.com/");
 
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas, true);
+const bccStatus = document.getElementById("status");
+const txInfo = document.getElementById("txInfo");
+const soundMute = document.getElementById("soundMute");
 
+let shadows = [];
+
+var coinMaterial, coinDonationMaterial, coinSDMaterial, groundMaterial, sideMaterial, blockMaterial, edgeMaterial; // materials
+var coinParent, ground; // global meshes
+var lastPicked, infoPlane, infoTexture, infoText, infoRect, highlight; // vars for GUI
+var soundDrop, soundDonation, soundWoosh, soundSD;
+
+// *************************************************************************************************************
+// CONNECT TO BITCOIN.COM CASHEXPLORER WEBSOCKET FOR INCOMMING TRANSACTIONS & INITIATE NEW BLOCK FOUND SEQUENCE
+// *************************************************************************************************************
 socket.on("connect", function() {
     socket.emit("subscribe", "inv");
 });
 
 socket.on("tx", function (data) {
-    
-	CreateTransaction(data.valueOut, data.txid, data.vout);
+	createTransaction(data.valueOut, data.txid, data.vout);
 });
 
 socket.on("block", function (data) {
@@ -22,21 +33,12 @@ socket.on("block", function (data) {
     xhr.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
             let obj = JSON.parse(this.responseText);
-            CreateBlock(obj.tx);
+            createBlock(obj.tx);
             updateStatusText();
-            //setTimeout(ClearTransactions(obj.tx), 1000);
         }
     }
 
 });
-
-const canvas = document.getElementById("renderCanvas");
-const engine = new BABYLON.Engine(canvas, true);
-const bccStatus = document.getElementById("status");
-const txInfo = document.getElementById("txInfo");
-const soundMute = document.getElementById("soundMute");
-
-let shadows = []; // array for shadows
 
 // ******************************
 // INITIAL CREATION OF THE SCENE
@@ -70,10 +72,10 @@ var createScene = function() {
 	camera.attachControl(canvas, true);
 
 	// lights
-	SetLights();
+	setLights();
 
 	// Create and set Materials
-	SetMaterials();
+	setMaterials();
 	
 	// physics
 	var physicsPlugin = new BABYLON.CannonJSPlugin();
@@ -96,19 +98,20 @@ var createScene = function() {
 	ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.2 }, scene);
 
     // add sides to the ground
-    CreateSides(numberOfSides, diameter);
+    createSides(numberOfSides, diameter);
 
     // create coinparent for cloning
-	coinParent = CreateParentCoin();
+	coinParent = createParentCoin();
 
-	// create UI for coin click info
-	 SetUI();
+    // create UI for coin click info
+    setUI();
 
     // set sound
-    soundDrop = new BABYLON.Sound("soundDrop", "assets/sounds/drop.wav", scene);
-    soundDonation = new BABYLON.Sound("soundDonation", "assets/sounds/woohoo.wav", scene);
-    soundWoosh = new BABYLON.Sound("soundWoosh", "assets/sounds/woosh.wav", scene);
-
+    soundDrop = new BABYLON.Sound("CoinDrop", "assets/sounds/drop.wav", scene);
+    soundDonation = new BABYLON.Sound("Donation", "assets/sounds/woohoo.wav", scene);
+    soundWoosh = new BABYLON.Sound("Woosh", "assets/sounds/woosh.wav", scene);
+    soundSD = new BABYLON.Sound("SatoshiDice", "assets/sounds/sd_coin.wav", scene);
+    
     // shows scene debugger
     BABYLON.DebugLayer.InspectorURL = "https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js";
 	scene.debugLayer.show();
@@ -142,10 +145,39 @@ var createScene = function() {
 }; // End of createScene function
 
 
-var coinMaterial, coinDonationMaterial, groundMaterial, sideMaterial, blockMaterial, edgeMaterial; // materials
-var coinParent, ground; // global meshes
-var lastPicked, infoPlane, infoTexture, infoText, infoRect, highlight; // vars for GUI
-var soundDrop, soundDonation, soundWoosh;
+// *********************
+//  SCENE OPTIMISATION
+// *********************
+var OptimizerOptions = function () {
+    var result = new BABYLON.SceneOptimizerOptions(30, 2000); // limit 30 FPS min here
+
+    var priority = 0;
+    result.optimizations.push(new BABYLON.ShadowsOptimization(priority));
+    result.optimizations.push(new BABYLON.LensFlaresOptimization(priority));
+
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.PostProcessesOptimization(priority));
+    result.optimizations.push(new BABYLON.ParticlesOptimization(priority));
+
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.TextureOptimization(priority, 256));
+
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
+
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 4));
+
+    return result;
+}
+
+// creates the scene
+var scene = createScene();
+
 
 // *********************
 //  NETWORK STATUS TEXT
@@ -178,43 +210,10 @@ function updateTxInfoText(txID) {
     }
 }
 
-// *********************
-//  SCENE OPTIMISATION
-// *********************
-var OptimizerOptions = function () {
-    var result = new BABYLON.SceneOptimizerOptions(30, 2000); // limit 30 FPS min here
-
-    var priority = 0;
-    result.optimizations.push(new BABYLON.ShadowsOptimization(priority));
-    result.optimizations.push(new BABYLON.LensFlaresOptimization(priority));
-
-    // Next priority
-    priority++;
-    result.optimizations.push(new BABYLON.PostProcessesOptimization(priority));
-    result.optimizations.push(new BABYLON.ParticlesOptimization(priority));
-
-    // Next priority
-    priority++;
-    result.optimizations.push(new BABYLON.TextureOptimization(priority, 256));
-
-    // Next priority
-    priority++;
-    result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
-
-    // Next priority
-    priority++;
-    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 4));
-
-    return result;
-}
-// creates the scene
-var scene = createScene();
-
-
 // ********************
 //  LIGHTING & SHADOWS
 // ********************
-function SetLights() {
+function setLights() {
     // hemispheric light
     
 	var lightHem = new BABYLON.HemisphericLight("Hemispheric", new BABYLON.Vector3(0, 1, 0), scene);
@@ -238,8 +237,9 @@ function SetLights() {
 // ************************
 //  MATERIALS AND TEXTURES
 // ************************
-function SetMaterials() {
+function setMaterials() {
     let coinTexture = new BABYLON.Texture("assets/textures/coin.png", scene);
+    let coinSDTexture = new BABYLON.Texture("assets/textures/sdlogo.png", scene);
     let colorOrange = new BABYLON.Color3(0.9686, 0.5804, 0.1137);
     let colorGreen = new BABYLON.Color3(0.298, 0.792, 0.278);
     let colorGrey = new BABYLON.Color3(0.2, 0.2, 0.2);
@@ -251,6 +251,7 @@ function SetMaterials() {
 	coinMaterial = new BABYLON.StandardMaterial("coin", scene);
     blockMaterial = new BABYLON.StandardMaterial("block", scene);
     coinDonationMaterial = new BABYLON.StandardMaterial("donation", scene);
+    coinSDMaterial = new BABYLON.StandardMaterial("sdCoin", scene);
 
     //  edge of ground
     edgeMaterial.diffuseColor = colorGrey;
@@ -280,6 +281,11 @@ function SetMaterials() {
     coinDonationMaterial.specularColor = colorGreen;
     coinDonationMaterial.specularPower = 64;
 
+    // satoshi dice material
+    coinSDMaterial.diffuseTexture = coinSDTexture;
+    coinSDMaterial.specularColor = colorGreen;
+    coinSDMaterial.specularPower = 64;
+
     // block
 	blockMaterial.diffuseColor = new BABYLON.Color3(1,0,0);
 	blockMaterial.specularColor = new BABYLON.Color3(1,0,1);
@@ -288,7 +294,7 @@ function SetMaterials() {
 // *******************
 //  TRANSACTION INFO
 // *******************
-function SetUI(){
+function setUI(){
 	infoPlane = BABYLON.Mesh.CreatePlane("plane", 3);
 	infoPlane.isPickable = false;
     infoPlane.position = new BABYLON.Vector3(0, -3, 0);
@@ -319,7 +325,7 @@ function SetUI(){
 // ****************************************************
 //  CONSTRUCTS SIDES OF THE BOWL FOR LOOKS AND PHYSICS
 // ****************************************************
-function CreateSides(numberOfSides, diameter) {
+function createSides(numberOfSides, diameter) {
 
     // constructive solid geometry from cylinders for the sides
 	var innerDiameter = diameter;
@@ -369,8 +375,8 @@ function CreateSides(numberOfSides, diameter) {
         sides[pt].visibility = 0;
         sides[pt].isPickable = false;
         
-        //highlight.addExcludedMesh(sides[pt]);
     }
+
     // dispose of the side parent as no longer needed
 	sideParent.dispose();
 }
@@ -378,18 +384,18 @@ function CreateSides(numberOfSides, diameter) {
 // *****************************
 //  CREATE INITIAL TRANSACTIONS - no longer used
 // *****************************
-function InitialTransactions(data) {
+function initialTransactions(data) {
 	for (var key in data) {
 		var value = data[key].output_total / 100000000;
 		var hash = data[key].hash;
-		CreateTransaction(value, hash);
+		createTransaction(value, hash);
 	}
 }
 
 // *****************************************************
 // CREATE PARENT COIN FOR CLONING WITH NEW TRANSACTIONS
 // *****************************************************
-function CreateParentCoin(){
+function createParentCoin(){
 	// uv map for texture location
     var uv = [
         new BABYLON.Vector4(1, 0, 0, 1),
@@ -429,7 +435,7 @@ function CreateParentCoin(){
 // ***************************************************
 //  CLONES PARENT COIN AND POSITIONS/ROTATES NEW COIN
 // ***************************************************
-function CreateTransaction(value, txid, vout) {
+function createTransaction(value, txid, vout) {
 	var x, y, z, w, h, rY, mesh, pr;
 
 	// initial random location of coin before they drop
@@ -486,7 +492,6 @@ function CreateTransaction(value, txid, vout) {
 
     // play sound on collision
     mesh.collided = true;
-
     mesh.physicsImpostor.registerOnPhysicsCollide(ground.physicsImpostor, function (main, collided) {
         if (main.object.collided == true && !soundMute.checked) {
             soundDrop.setPlaybackRate(pr);
@@ -504,7 +509,23 @@ function CreateTransaction(value, txid, vout) {
         keys.forEach((k) => {
             if (k == "1BEpW8LnYmBpSFpgJkhPM8Ga7Ry99MPUmE") {
                 mesh.material = coinDonationMaterial;
-                soundDonation.play();
+                if (!soundMute.checked) soundDonation.play();
+            } else if (
+                k == "1DiceoejxZdTrYwu3FMP2Ldew91jq9L2u" ||
+                k == "1Dice115YcjDrPM9gXFW8iFV9S3j9MtERm" ||
+                k == "1Dice1FZk6Ls5LKhnGMCLq47tg1DFG763e" ||
+                k == "1Dice1cF41TGRLoCTbtN33DSdPtTujzUzx" ||
+                k == "1Dice1wBBY22stCobuE1LJxHX5FNZ7U97N" ||
+                k == "1Dice2wTatMqebSPsbG4gKgT3HfHznsHWi" ||
+                k == "1Dice5ycHmxDHUFVkdKGgrwsDDK1mPES3U" ||
+                k == "1Dice7JNVnvzyaenNyNcACuNnRVjt7jBrC" ||
+                k == "1Dice7v1M3me7dJGtTX6cqPggwGoRADVQJ" ||
+                k == "1Dice81SKu2S1nAzRJUbvpr5LiNTzn7MDV" ||
+                k == "1Dice9GgmweQWxqdiu683E7bHfpb7MUXGd") {
+
+                mesh.material = coinSDMaterial;
+                soundSD.setVolume(0.2);
+                if (!soundMute.checked) soundSD.play();
             }
         });
     });
@@ -514,7 +535,7 @@ function CreateTransaction(value, txid, vout) {
 // *****************************
 //  CREATE BLOCK AND ANIMATE IT
 // *****************************
-function CreateBlock(txData) {
+function createBlock(txData) {
 	var block = BABYLON.Mesh.CreateBox("block", 1, scene);
 	block.material = blockMaterial;
 	block.position.y = 3;
@@ -540,7 +561,7 @@ function CreateBlock(txData) {
     BABYLON.Animation.CreateAndStartAnimation('scaleBlockY', block, 'scaling.y', 60, 60, block.scaling.y, 4, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
     BABYLON.Animation.CreateAndStartAnimation('scaleBlockZ', block, 'scaling.z', 60, 60, block.scaling.z, 4, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
 
-
+    // suck up coins into block
     txData.forEach((tx) => {
         if (scene.getMeshByName(tx)) {
             var coin = scene.getMeshByName(tx);
@@ -550,11 +571,10 @@ function CreateBlock(txData) {
         }
     });
 
-
     // dispose of block and transactions
     animation.onAnimationEnd = function () {
         animation.animationStarted = false;
-        ClearTransactions(txData);
+        clearTransactions(txData);
         block.dispose();
     }
 
@@ -564,7 +584,7 @@ function CreateBlock(txData) {
 // *************************************************
 //  CLEAR TRANSACTIONS THAT ARE INCLUDED IN A BLOCK
 // *************************************************
-function ClearTransactions(data) {
+function clearTransactions(data) {
     data.forEach((tx) => {
         if (scene.getMeshByName(tx)) scene.getMeshByName(tx).dispose(true);
     });
@@ -617,6 +637,7 @@ window.addEventListener("click", function () {
 function followTransaction(id) {
     if (id.length != 64) return;
 
+    // check if searched tx is available
     let isAvailable = false;
     scene.meshes.forEach((mesh) => {
         if (mesh.name == id) {
@@ -625,6 +646,7 @@ function followTransaction(id) {
         }
     });
 
+    // search transaction is unconfirmed and create new coin if true
     if (!isAvailable) {    
         xhr.open('GET', "https://bitcoincash.blockexplorer.com/api/tx/" + id, true);
         xhr.send();
@@ -632,7 +654,7 @@ function followTransaction(id) {
             if (this.readyState == 4 && this.status == 200) {
                 let obj = JSON.parse(this.responseText);
                 if (obj.confirmations == 0) {
-                    CreateTransaction(obj.valueOut, id, obj.vout);
+                    createTransaction(obj.valueOut, id, obj.vout);
                     scene.meshes.forEach((mesh) => {
                         if (mesh.name == id) {
                             highlightCoin(mesh);
@@ -642,7 +664,6 @@ function followTransaction(id) {
                 }    
             }
         }
-        
     }
 }
 

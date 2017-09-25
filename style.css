@@ -192,17 +192,17 @@ div.tab button {
 }
 
 button.close {
-        background-color: #D4D4D4;
-        border: none;
-        outline: none;
-        cursor: pointer;
-        padding: 14px 16px;
-        transition: 0.3s;
-        position: absolute;
-        border-radius: 5px;
-        top: 10px;
-        right: 10px;
-        opacity:1;
+    background-color: #D4D4D4;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    position: absolute;
+    border-radius: 5px;
+    top: 10px;
+    right: 10px;
+    opacity:1;
 }
 
 /* Change background color of buttons on hover */
@@ -228,14 +228,16 @@ div.tab button.right{
 /* Style the tab content */
 .tabcontent {
     display: none;
-    position: absolute;
     overflow-y: auto;
-    top: 63px;
-    bottom: 10px;
-    left: 10px;
-    right: 10px;
+    width: 100%;
+    max-width: 650px;
+    margin: auto;
+    max-height: 85%;
     padding: 5px;
     transition: 0.3s;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .qrcode{

@@ -6,9 +6,10 @@ const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas, true);
 const bccStatus = document.getElementById("status");
 const txInfo = document.getElementById("txInfo");
+const bccLogo = document.getElementById("bccLogo");
 const soundMute = document.getElementById("soundMute");
 const coinColor = document.getElementById("coinColor");
-const bccLogo = document.getElementById("bccLogo");
+const disableSD = document.getElementById("disableSD");
 
 let shadows = [];
 
@@ -25,7 +26,8 @@ socket.on("connect", function() {
 });
 
 socket.on("tx", function (data) {
-	createTransaction(data.valueOut, data.txid, data.vout);
+    createTransaction(data.valueOut, data.txid, data.vout);
+    console.log(data);
 });
 
 socket.on("block", function (data) {
@@ -527,6 +529,7 @@ function specialTransaction(vout, mesh) {
                 mesh.material = coinDonationMaterial;
                 if (!soundMute.checked) soundDonation.play();
             } else if (
+                !disableSD.checked &&
                 k == "1DiceoejxZdTrYwu3FMP2Ldew91jq9L2u" ||
                 k == "1Dice115YcjDrPM9gXFW8iFV9S3j9MtERm" ||
                 k == "1Dice1FZk6Ls5LKhnGMCLq47tg1DFG763e" ||
@@ -539,10 +542,10 @@ function specialTransaction(vout, mesh) {
                 k == "1Dice81SKu2S1nAzRJUbvpr5LiNTzn7MDV" ||
                 k == "1Dice9GgmweQWxqdiu683E7bHfpb7MUXGd") {
 
-                mesh.sdTransaction = true;
-                mesh.material = coinSDMaterial;
-                soundSD.setVolume(0.2);
-                if (!soundMute.checked) soundSD.play();
+                    mesh.sdTransaction = true;
+                    mesh.material = coinSDMaterial;
+                    soundSD.setVolume(0.2);
+                    if (!soundMute.checked) soundSD.play();
             }
         });
     });

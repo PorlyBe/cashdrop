@@ -29,11 +29,16 @@ html, body {
     float:left;
     margin-top: 10px;
     width: 100%;
+    color: #fff;
+    text-shadow: 2px 2px #000;
 }
 
 #status{
     float:left;
-    width:100%;
+    padding: 10px;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.5);
+    border-radius: 5px;
 }
 
 #controls {
@@ -42,16 +47,6 @@ html, body {
     top: 10px;
     width: 48px;
 }
-
-/*input[type='button'] {
-    border: 2px solid #FFFFFF;
-    cursor: pointer;
-    background: #D4D4D4;
-    height: 48px;
-    width: 48px;
-    border-radius: 5px;
-    font-family: monospace;
-}*/
 
 #txInfo{
     margin-bottom: 10px;
@@ -118,7 +113,9 @@ html, body {
 
 #showTransaction {
     border: 2px solid #ffffff;
-    background: #D4D4D4;
+    background-color: #D4D4D4;
+    background-color: rgba(149,149,149,0.5);
+    color: #fff;
     height: 48px;
     border-radius: 5px;
     font-family: monospace;

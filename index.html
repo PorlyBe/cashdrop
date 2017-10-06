@@ -103,7 +103,7 @@
             <span class="slider"></span>
         </label>
 
-        <h3 class="switchlabel left">[WIP]Coin Value/bytes</h3>
+        <h3 class="switchlabel left">[TBD]Coin Value/bytes</h3>
         <label class="switch">
             <input type="checkbox" id="txRef" />
             <span class="slider"></span>
@@ -117,42 +117,7 @@
         <div id="txInfo"></div>
         <input type="text" id="showTransaction" value="Input Transaction ID to highlight it" size="64" onfocus="this.select()" onmouseup="return false;" onchange="followTransaction(this.value);" onkeyup="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();"/>
     </div>
-    <script>
-        //var credits = document.getElementById("help");
-        function show(e) {
-            var element = document.getElementById(e);
-            element.style.display = "block";
-        }
-        function hide(e) {
-            var element = document.getElementById(e);
-            element.style.display = "none";
-        }
-
-
-        function openTab(evt, name) {
-            // Declare all variables
-            var i, tabcontent, tablinks;
-
-            // Get all elements with class="tabcontent" and hide them
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-
-            // Get all elements with class="tablinks" and remove the class "active"
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-
-            // Show the current tab, and add an "active" class to the button that opened the tab
-            document.getElementById(name).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
-
-    </script>
 
     <script src="js/cashdrop.js"></script>
-
 </body>
 </html>

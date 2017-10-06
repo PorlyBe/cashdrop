@@ -627,6 +627,7 @@ window.addEventListener("resize", function() {
 
 // when user clicks on a coin
 window.addEventListener("click", function () {
+    if (event.target != canvas) return;
 
     var pickResult = scene.pick(scene.pointerX, scene.pointerY);
     var pickedMesh = pickResult.pickedMesh;
@@ -649,50 +650,6 @@ window.addEventListener("click", function () {
     }
     
 });
-
-// user clicks coin colour
-coinColor.addEventListener("click", function () {
-    setCoinColor(coinColor.checked);
-    setCookie("coinColor", this.checked, 7);
-    console.log(getCookie("coinColor"));
-});
-
-
-soundMute.addEventListener("click", function () {
-    setCookie("mute", this.checked, 7);
-});
-
-disableSD.addEventListener("click", function () {
-    setCookie("disableSD", this.checked, 7);
-});
-
-window.onload = function () {
-    if (getCookie("mute") == "true") {
-        soundMute.checked = true;
-    }
-
-    if (getCookie("coinColor") == "true") {
-        coinColor.checked = true;
-        setCoinColor(coinColor.checked);
-    }
-
-    if (getCookie("disableSD") == "true") {
-        disableSD.checked = true;
-    }
-
-    window.cookieconsent.initialise({
-        "palette": {
-            "popup": {
-                "background": "#000",
-                "text": "#4cca47"
-            },
-            "button": {
-                "background": "#4cca47"
-            }
-        }
-    });
-
-};
 
 // sets color of coin material
 function setCoinColor(orange) {
@@ -763,6 +720,45 @@ function highlightCoin(mesh){
 // ***************
 // COOKIES
 // ***************
+window.onload = function () {
+    if (getCookie("mute") == "true") soundMute.checked = true;
+    if (getCookie("disableSD") == "true") disableSD.checked = true;
+
+    if (getCookie("coinColor") == "true") {
+        coinColor.checked = true;
+        setCoinColor(coinColor.checked);
+    }
+
+    // cookie notice
+    window.cookieconsent.initialise({
+        "palette": {
+            "popup": {
+                "background": "#000",
+                "text": "#4cca47"
+            },
+            "button": {
+                "background": "#4cca47"
+            }
+        }
+    });
+
+};
+
+// event listeners for click changes
+coinColor.addEventListener("click", function () {
+    setCoinColor(coinColor.checked);
+    setCookie("coinColor", this.checked, 7);
+});
+
+soundMute.addEventListener("click", function () {
+    setCookie("mute", this.checked, 7);
+});
+
+disableSD.addEventListener("click", function () {
+    setCookie("disableSD", this.checked, 7);
+});
+
+// sets a cookie
 function setCookie(cname, cvalue, exdays) {
     var d = new Date();
     d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
@@ -770,6 +766,7 @@ function setCookie(cname, cvalue, exdays) {
     document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
 }
 
+// gets a cookie
 function getCookie(cname) {
     var name = cname + "=";
     var decodedCookie = decodeURIComponent(document.cookie);
@@ -785,5 +782,3 @@ function getCookie(cname) {
     }
     return "";
 }
-
-//setCookie('mute', soundMute.checked);

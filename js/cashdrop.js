@@ -529,7 +529,7 @@ function specialTransaction(vout, mesh) {
                 if (!soundMute.checked) soundDonation.play();
             } else if (
                 !disableSD.checked &&
-                k == "1DiceoejxZdTrYwu3FMP2Ldew91jq9L2u" ||
+                (k == "1DiceoejxZdTrYwu3FMP2Ldew91jq9L2u" ||
                 k == "1Dice115YcjDrPM9gXFW8iFV9S3j9MtERm" ||
                 k == "1Dice1FZk6Ls5LKhnGMCLq47tg1DFG763e" ||
                 k == "1Dice1cF41TGRLoCTbtN33DSdPtTujzUzx" ||
@@ -539,7 +539,7 @@ function specialTransaction(vout, mesh) {
                 k == "1Dice7JNVnvzyaenNyNcACuNnRVjt7jBrC" ||
                 k == "1Dice7v1M3me7dJGtTX6cqPggwGoRADVQJ" ||
                 k == "1Dice81SKu2S1nAzRJUbvpr5LiNTzn7MDV" ||
-                k == "1Dice9GgmweQWxqdiu683E7bHfpb7MUXGd") {
+                k == "1Dice9GgmweQWxqdiu683E7bHfpb7MUXGd")) {
 
                     mesh.sdTransaction = true;
                     mesh.material = coinSDMaterial;
@@ -653,19 +653,33 @@ window.addEventListener("click", function () {
 // user clicks coin colour
 coinColor.addEventListener("click", function () {
     setCoinColor(coinColor.checked);
-    setCookie("coinColor", coinColor.checked);
+    setCookie("coinColor", this.checked, 7);
+    console.log(getCookie("coinColor"));
 });
 
 
-soundMute.addEventListener("click", function(){
-    setCookie("mute", this.checked);
+soundMute.addEventListener("click", function () {
+    setCookie("mute", this.checked, 7);
 });
 
 disableSD.addEventListener("click", function () {
-    setCookie("disableSD", this.checked);
+    setCookie("disableSD", this.checked, 7);
 });
 
 window.onload = function () {
+    if (getCookie("mute") == "true") {
+        soundMute.checked = true;
+    }
+
+    if (getCookie("coinColor") == "true") {
+        coinColor.checked = true;
+        setCoinColor(coinColor.checked);
+    }
+
+    if (getCookie("disableSD") == "true") {
+        disableSD.checked = true;
+    }
+
     window.cookieconsent.initialise({
         "palette": {
             "popup": {
@@ -677,10 +691,7 @@ window.onload = function () {
             }
         }
     });
-    soundMute.checked = getCookie("mute");
-    coinColor.checked = getCookie("coinColor");
-    setCoinColor(coinColor.checked);
-    disableSD.checked = getCookie("disableSD");
+
 };
 
 // sets color of coin material

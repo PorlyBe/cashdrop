@@ -27,7 +27,6 @@ socket.on("connect", function() {
 
 socket.on("tx", function (data) {
     createTransaction(data.valueOut, data.txid, data.vout);
-    console.log(data);
 });
 
 socket.on("block", function (data) {
@@ -653,7 +652,40 @@ window.addEventListener("click", function () {
 
 // user clicks coin colour
 coinColor.addEventListener("click", function () {
-    if (coinColor.checked) {
+    setCoinColor(coinColor.checked);
+    setCookie("coinColor", coinColor.checked);
+});
+
+
+soundMute.addEventListener("click", function(){
+    setCookie("mute", this.checked);
+});
+
+disableSD.addEventListener("click", function () {
+    setCookie("disableSD", this.checked);
+});
+
+window.onload = function () {
+    window.cookieconsent.initialise({
+        "palette": {
+            "popup": {
+                "background": "#000",
+                "text": "#4cca47"
+            },
+            "button": {
+                "background": "#4cca47"
+            }
+        }
+    });
+    soundMute.checked = getCookie("mute");
+    coinColor.checked = getCookie("coinColor");
+    setCoinColor(coinColor.checked);
+    disableSD.checked = getCookie("disableSD");
+};
+
+// sets color of coin material
+function setCoinColor(orange) {
+    if (orange) {
         coinMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/coin_orange.png", scene);
         coinMaterial.specularColor = new BABYLON.Color3(0.9686, 0.5804, 0.1137);
         bccLogo.src = 'assets/images/bccbanner_orange.png';
@@ -662,9 +694,7 @@ coinColor.addEventListener("click", function () {
         coinMaterial.specularColor = new BABYLON.Color3(0.298, 0.792, 0.278);
         bccLogo.src = 'assets/images/bccbanner.png';
     }
-    
-});
-
+}
 
 // **************************************
 // FOLLOWS TRANSACTIONS TYPED IN TEXTBOX
@@ -718,3 +748,31 @@ function highlightCoin(mesh){
     highlight.addMesh(mesh, BABYLON.Color3.White());
     lastPicked = mesh;
 }
+
+// ***************
+// COOKIES
+// ***************
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    var expires = "expires=" + d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+//setCookie('mute', soundMute.checked);

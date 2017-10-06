@@ -7,13 +7,15 @@ const engine = new BABYLON.Engine(canvas, true);
 const bccStatus = document.getElementById("status");
 const txInfo = document.getElementById("txInfo");
 const soundMute = document.getElementById("soundMute");
+const coinColor = document.getElementById("coinColor");
+const bccLogo = document.getElementById("bccLogo");
 
 let shadows = [];
 
-var coinMaterial, coinDonationMaterial, coinSDMaterial, groundMaterial, sideMaterial, blockMaterial, edgeMaterial; // materials
-var coinParent, ground; // global meshes
-var lastPicked, infoPlane, infoTexture, infoText, infoRect, highlight; // vars for GUI
-var soundDrop, soundDonation, soundWoosh, soundSD;
+let coinMaterial, coinDonationMaterial, coinSDMaterial, groundMaterial, sideMaterial, blockMaterial, edgeMaterial; // materials
+let coinParent, ground; // global meshes
+let lastPicked, infoPlane, infoTexture, infoText, infoRect, highlight; // vars for GUI
+let soundDrop, soundDonation, soundWoosh, soundSD;
 
 // *************************************************************************************************************
 // CONNECT TO BITCOIN.COM CASHEXPLORER WEBSOCKET FOR INCOMMING TRANSACTIONS & INITIATE NEW BLOCK FOUND SEQUENCE
@@ -45,7 +47,7 @@ socket.on("block", function (data) {
 // ******************************
 var createScene = function() {
 	var scene = new BABYLON.Scene(engine);
-	
+    
 	// create skybox & skybox material
     var skybox = BABYLON.Mesh.CreateBox("skyBox", 100.0, scene);
     var skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
@@ -71,6 +73,7 @@ var createScene = function() {
 	camera.pinchPrecision = 30;
 	camera.attachControl(canvas, true);
 
+    
 	// lights
 	setLights();
 
@@ -238,8 +241,7 @@ function setLights() {
 // ************************
 function setMaterials() {
     let coinTexture = new BABYLON.Texture("assets/textures/coin.png", scene);
-    let coinSDTexture = new BABYLON.Texture("assets/textures/sdlogo.png", scene);
-    let colorOrange = new BABYLON.Color3(0.9686, 0.5804, 0.1137);
+    let coinSDTexture = new BABYLON.Texture("assets/textures/sdlogo.png", scene); // satoshi dice logo
     let colorGreen = new BABYLON.Color3(0.298, 0.792, 0.278);
     let colorGrey = new BABYLON.Color3(0.2, 0.2, 0.2);
 
@@ -247,7 +249,7 @@ function setMaterials() {
     groundMaterial = new BABYLON.StandardMaterial("ground", scene);
     edgeMaterial = new BABYLON.StandardMaterial("edge", scene);
     sideMaterial = new BABYLON.StandardMaterial("side", scene);
-	coinMaterial = new BABYLON.StandardMaterial("coin", scene);
+    coinMaterial = new BABYLON.StandardMaterial("coin", scene);
     blockMaterial = new BABYLON.StandardMaterial("block", scene);
     coinDonationMaterial = new BABYLON.StandardMaterial("donation", scene);
     coinSDMaterial = new BABYLON.StandardMaterial("sdCoin", scene);
@@ -273,7 +275,7 @@ function setMaterials() {
     coinMaterial.diffuseTexture = coinTexture;
     coinMaterial.specularColor = colorGreen;
     coinMaterial.specularPower = 64;
-
+    
     // coin donation material
     coinDonationMaterial.diffuseTexture = coinTexture;
     coinDonationMaterial.diffuseColor = new BABYLON.Color3(1, 1, 0);
@@ -287,7 +289,8 @@ function setMaterials() {
 
     // block
 	blockMaterial.diffuseColor = new BABYLON.Color3(1,0,0);
-	blockMaterial.specularColor = new BABYLON.Color3(1,0,1);
+    blockMaterial.specularColor = new BABYLON.Color3(1, 0, 1);
+
 }
 
 // *******************
@@ -622,7 +625,7 @@ window.addEventListener("resize", function() {
 
 // when user clicks on a coin
 window.addEventListener("click", function () {
-    
+
     var pickResult = scene.pick(scene.pointerX, scene.pointerY);
     var pickedMesh = pickResult.pickedMesh;
 
@@ -641,8 +644,24 @@ window.addEventListener("click", function () {
     } else {
         highlightCoin(pickedMesh);
         updateTxInfoText(pickedMesh);
-    } 
+    }
+    
 });
+
+// user clicks coin colour
+coinColor.addEventListener("click", function () {
+    if (coinColor.checked) {
+        coinMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/coin_orange.png", scene);
+        coinMaterial.specularColor = new BABYLON.Color3(0.9686, 0.5804, 0.1137);
+        bccLogo.src = 'assets/images/bccbanner_orange.png';
+    } else {
+        coinMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/coin.png", scene);
+        coinMaterial.specularColor = new BABYLON.Color3(0.298, 0.792, 0.278);
+        bccLogo.src = 'assets/images/bccbanner.png';
+    }
+    
+});
+
 
 // **************************************
 // FOLLOWS TRANSACTIONS TYPED IN TEXTBOX

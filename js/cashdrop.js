@@ -573,25 +573,25 @@ function getCoinWidth(isBytes, value) {
             }
     } else {
         // diameter of coin depending on size in bytes
-        if (value < 250) {
+        if (value < 300) {
             w = 0.2;
             pr = 1;
-        } else if (value >= 250 && value < 350){
+        } else if (value >= 300 && value < 500){
             w = 0.4;
             pr = 0.9;
-        } else if (value >= 350 && value < 450) {
+        } else if (value >= 500 && value < 750) {
             w = 0.6;
             pr = 0.8;
-        } else if (value >= 450 && value < 550) {
+        } else if (value >= 750 && value < 1000) {
             w = 0.8;
             pr = 0.7;
-        } else if (value >= 550 && value < 650) {
+        } else if (value >= 1500 && value < 2000) {
             w = 1;
             pr = 0.6;
-        } else if (value >= 650 && value < 850) {
+        } else if (value >= 2000 && value < 3000) {
             w = 1.2;
             pr = 0.5;
-        } else if (value >= 850 && value < 1000) {
+        } else if (value >= 3000 && value < 5000) {
             w = 1.4;
             pr = 0.4;
         } else {
@@ -692,9 +692,7 @@ function createBlock(txData) {
 function clearTransactions(data) {
     data.forEach((tx) => {
         transactions.forEach((t, i) => {
-            if (t == tx) {
-                transactions.splice(i,1);
-            }
+            if (t == tx) transactions.splice(i,1);
         });
         if (scene.getMeshByName(tx)) scene.getMeshByName(tx).dispose(true);
     });

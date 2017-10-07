@@ -10,6 +10,7 @@ const bccLogo = document.getElementById("bccLogo");
 const soundMute = document.getElementById("soundMute");
 const coinColor = document.getElementById("coinColor");
 const disableSD = document.getElementById("disableSD");
+const txRef = document.getElementById("txRef");
 
 let shadows = [];
 
@@ -26,7 +27,24 @@ socket.on("connect", function() {
 });
 
 socket.on("tx", function (data) {
-    createTransaction(data.valueOut, data.txid, data.vout);
+
+    xhr.open('GET', "https://cashexplorer.bitcoin.com/api/tx/" + data.txid, true);
+    xhr.send();
+
+    xhr.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            let obj = JSON.parse(this.responseText);
+
+            createTransaction(data.valueOut, data.txid, data.vout, obj.size);
+        }
+    }
+
+    //if (txRef.checked) {
+        
+        
+    //} else {
+    //    createTransaction(data.valueOut, data.txid, data.vout);
+    //}
 });
 
 socket.on("block", function (data) {
@@ -434,43 +452,28 @@ function createParentCoin(){
 	return coin;
 }
 
+let transactions = [];
 // ***************************************************
 //  CLONES PARENT COIN AND POSITIONS/ROTATES NEW COIN
 // ***************************************************
-function createTransaction(value, txid, vout) {
-	var x, y, z, w, h, rY, mesh, pr;
+function createTransaction(value, txid, vout, size) {
+	let x, y, z, w, h, rY, mesh, pr;
+
+    transactions.push(txid);
 
 	// initial random location of coin before they drop
 	x = -2 + Math.random() * 4;
 	z = -2 + Math.random() * 4;
 	y = 5 + Math.random() * 10;
 
-	// diameter of coin depending on size of value
-	if (value < 1) {
-        w = .2;
-        pr = 1;
-	} else if (value >= 1 && value < 10) {
-        w = .4;
-        pr = 0.9;
-	} else if (value >= 10 && value < 50) {
-        w = .6;
-        pr = 0.8;
-	} else if (value >= 50 && value < 100) {
-        w = .8;
-        pr = 0.7;
-	} else if (value >= 100 && value < 200) {
-        w = 1;
-        pr = 0.6;
-	} else if (value >= 200 && value < 500){
-        w = 1.2;
-        pr = 0.5;
-	} else if (value >= 500 && value < 1000){
-        w = 1.4;
-        pr = 0.4;
-	} else {
-        w = 1.6;
-        pr = 0.3;
-	}
+    // set width and playback rate depending on size or value
+    if (txRef.checked) {
+        w = getCoinWidth(true, size).width;
+        pr = getCoinWidth(true, size).playback;
+    } else {
+        w = getCoinWidth(false, value).width;
+        pr = getCoinWidth(false, value).playback;
+    }
 
 	// coin height
 	h = w / 8;
@@ -488,6 +491,7 @@ function createTransaction(value, txid, vout) {
     mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: w, restitution: 0.1 }, scene);
 
     mesh.txValue = value;
+    mesh.txSize = size;
     
 	// add mesh to shadow render list
 	for (var i in shadows){
@@ -514,6 +518,89 @@ function createTransaction(value, txid, vout) {
 
     // checks if a transaction is special
     specialTransaction(vout, mesh);
+}
+
+// reset coin width based upon size or value
+function resetCoinWidths() {
+    transactions.forEach((tx) => {
+        //console.log(tx + " " + i);
+        let t = scene.getMeshByName(tx);
+        let w = 1;
+        if (txRef.checked) {
+            w = getCoinWidth(true, t.txSize).width;
+        } else {
+            w = getCoinWidth(false, t.txValue).width;
+        }
+
+        t.scaling = new BABYLON.Vector3(w, w, w);
+        t.physicsImpostor.mass = w;
+    });
+    //highlightCoin(null);
+}
+
+
+// sets coin width based on value or size
+function getCoinWidth(isBytes, value) {
+    let w = 1;
+    let pr = 1;
+
+    if (!isBytes){
+        // diameter of coin depending on value
+        if (value < 1) {
+            w = .2;
+            pr = 1;
+        } else if (value >= 1 && value < 10) {
+            w = .4;
+            pr = 0.9;
+        } else if (value >= 10 && value < 50) {
+            w = .6;
+            pr = 0.8;
+        } else if (value >= 50 && value < 100) {
+            w = .8;
+            pr = 0.7;
+        } else if (value >= 100 && value < 200) {
+            w = 1;
+            pr = 0.6;
+        } else if (value >= 200 && value < 500) {
+            w = 1.2;
+            pr = 0.5;
+        } else if (value >= 500 && value < 1000) {
+            w = 1.4;
+            pr = 0.4;
+        } else {
+            w = 1.6;
+            pr = 0.3;
+            }
+    } else {
+        // diameter of coin depending on size in bytes
+        if (value < 250) {
+            w = 0.2;
+            pr = 1;
+        } else if (value >= 250 && value < 350){
+            w = 0.4;
+            pr = 0.9;
+        } else if (value >= 350 && value < 450) {
+            w = 0.6;
+            pr = 0.8;
+        } else if (value >= 450 && value < 550) {
+            w = 0.8;
+            pr = 0.7;
+        } else if (value >= 550 && value < 650) {
+            w = 1;
+            pr = 0.6;
+        } else if (value >= 650 && value < 850) {
+            w = 1.2;
+            pr = 0.5;
+        } else if (value >= 850 && value < 1000) {
+            w = 1.4;
+            pr = 0.4;
+        } else {
+            w = 1.6;
+            pr = 0.3;
+        }
+    }
+
+    return {width: w, playback: pr};
 }
 
 // *******************************************************
@@ -604,6 +691,11 @@ function createBlock(txData) {
 // *************************************************
 function clearTransactions(data) {
     data.forEach((tx) => {
+        transactions.forEach((t, i) => {
+            if (t == tx) {
+                transactions.splice(i,1);
+            }
+        });
         if (scene.getMeshByName(tx)) scene.getMeshByName(tx).dispose(true);
     });
 
@@ -709,9 +801,16 @@ function highlightCoin(mesh){
     infoPlane.position.y = -1;
     infoPlane.visibility = 1;
 
-    var txVal = mesh.txValue.toString();
-    infoText.text = txVal;
-    infoRect.width = txVal.length / 17;
+    if (txRef.checked) {
+        var txSize = mesh.txSize.toString() + " bytes";
+        infoText.text = txSize;
+        
+    } else {
+        var txVal = mesh.txValue.toString() + " BCC";
+        infoText.text = txVal;
+    }
+
+    infoRect.width = infoText.text.length / 17;
 
     highlight.addMesh(mesh, BABYLON.Color3.White());
     lastPicked = mesh;
@@ -723,6 +822,7 @@ function highlightCoin(mesh){
 window.onload = function () {
     if (getCookie("mute") == "true") soundMute.checked = true;
     if (getCookie("disableSD") == "true") disableSD.checked = true;
+    if (getCookie("txRef") == "true") txRef.checked = true;
 
     if (getCookie("coinColor") == "true") {
         coinColor.checked = true;
@@ -747,15 +847,20 @@ window.onload = function () {
 // event listeners for click changes
 coinColor.addEventListener("click", function () {
     setCoinColor(coinColor.checked);
-    setCookie("coinColor", this.checked, 7);
+    setCookie("coinColor", this.checked);
 });
 
 soundMute.addEventListener("click", function () {
-    setCookie("mute", this.checked, 7);
+    setCookie("mute", this.checked);
 });
 
 disableSD.addEventListener("click", function () {
-    setCookie("disableSD", this.checked, 7);
+    setCookie("disableSD", this.checked);
+});
+
+txRef.addEventListener("click", function () {
+    resetCoinWidths();
+    setCookie("txRef", this.checked);
 });
 
 // sets a cookie

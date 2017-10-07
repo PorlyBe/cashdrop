@@ -585,7 +585,7 @@ function getCoinWidth(isBytes, value) {
         } else if (value >= 750 && value < 1000) {
             w = 0.8;
             pr = 0.7;
-        } else if (value >= 1500 && value < 2000) {
+        } else if (value >= 1000 && value < 2000) {
             w = 1;
             pr = 0.6;
         } else if (value >= 2000 && value < 3000) {

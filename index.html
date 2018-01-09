@@ -10,10 +10,8 @@
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="shortcut icon" id="bccIcon" type="image/png" href="assets/images/favicon.png" />
 
-    <script	src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/cannon.js"></script>
-    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
+    <script src="js/babylon.custom.js"></script>
     <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
 
     <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css" />
@@ -118,6 +116,6 @@
         <input type="text" id="showTransaction" value="Input Transaction ID to highlight it" size="64" onfocus="this.select()" onmouseup="return false;" onchange="followTransaction(this.value);" onkeyup="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();"/>
     </div>
 
-    <script src="js/cashdrop.js"></script>
+    <script src="js/cashdrop.min.js"></script>
 </body>
 </html>

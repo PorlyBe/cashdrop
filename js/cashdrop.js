@@ -804,7 +804,7 @@ function highlightCoin(mesh){
         infoText.text = txSize;
         
     } else {
-        var txVal = mesh.txValue.toString() + " BCC";
+        var txVal = mesh.txValue.toString() + " BCH";
         infoText.text = txVal;
     }
 
